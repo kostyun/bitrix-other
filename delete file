@@ -1,0 +1,110 @@
+Предположим мы знаем полный путь к этому файлу: /upload/disk/1af/1af4ec03a3abd8e20f4a35e297e28101
+Задача: найти и удалить все файлы на диске, которые прикреплены к этому физическому файлу.
+
+Первое что необходимо - это найти ID файла в таблице b_file:
+
+Код
+
+/**
+ * ID найденного физического файла
+ * @var integer
+ */
+$iFileId = 0;
+
+/**
+ * Путь до файла который удаляем
+ * @var string
+ */
+$filePath = '/upload/disk/1af/1af4ec03a3abd8e20f4a35e297e28101';
+
+/**
+ * убираем лишнее
+ */
+$filePath = str_replace('/upload/', '', $filePath);
+
+if ( preg_match_all('#(disk/.{3})/(.*)#i', $filePath, $arMatches) )
+{
+   $arFile = \Bitrix\Main\FileTable::getRow([
+      'select' => ['ID'],
+      'filter' => [
+         '=MODULE_ID' => 'disk',
+         '=SUBDIR'    => $arMatches[1],
+         '=FILE_NAME' => $arMatches[2]
+      ]
+   ]);
+
+   if ( $arFile )
+   {
+      $iFileId = $arFile['ID'];
+   }
+}
+
+if ( empty($iFileId) )
+{
+   echo "Файл не найден";
+   die();
+}
+
+echo "Найден файл: ". $iFileId;
+
+
+
+Окей. Нашли ID файла в b_file, далее нужно найти все реальные обьекты диска привязанные к этому файлу.
+
+Код
+
+\Bitrix\Main\Loader::IncludeModule('disk');
+
+/**
+ * ID файла который подлежит удалению
+ * @var integer
+ */
+
+$iFileId = 274;
+
+/**
+ * Кто инициирует удаление файла
+ * @var integer
+ */
+$deletedBy = 1;
+
+$diskFile = \Bitrix\Disk\File::load([
+   '=FILE_ID' => $iFileId
+]);
+
+if ( $diskFile instanceof \Bitrix\Disk\BaseObject )
+{
+   $result = $diskFile->delete($deletedBy);
+
+   if ( $result )
+   {
+      echo "Успешно удален";
+      die();
+   }
+   else
+   {
+      echo "Удаление не произведено";
+      die();
+   }
+}
+else
+{
+   echo "Файл диска не найден";
+   die();
+}
+
+
+
+Можно конечно не удалять файл, а перетаскивать в корзину, для этого вместо
+Код
+
+$diskFile->delete($deletedBy);
+
+
+
+Нужно использовать:
+Код
+
+$diskFile->markDeleted($deletedBy);
+
+
