@@ -1,6 +1,7 @@
 <?
 // В качестве аргумента укажите путь к командной строке, например: /home/bitrix/www/
 // Использование в crontab: 0 22 * * * bitrix php=$(which php) ; $php -f /home/bitrix/tools/reindex_search.php -- /home/bitrix/www/
+// https://dev.1c-bitrix.ru/api_help/search/classes/csearch/reindexall.php
 
 
 set_time_limit(0);
